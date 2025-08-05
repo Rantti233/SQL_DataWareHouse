@@ -7,7 +7,12 @@ Purpose:
     The Action:
             --Truncates silver Table
             --Insert Transform and cleansed data from Bronze layer to Silver Layer
-
+Usage example:
+    exec silver.load_silver
+Prarameters:
+    None
+This stored Procedure does not accept the any parameters or return any values
+===================================================================================================================================
 */
 CREATE OR ALTER PROCEDURE silver.load_silver AS
   BEGIN
@@ -22,6 +27,7 @@ CREATE OR ALTER PROCEDURE silver.load_silver AS
     print 'Loading CRM Tables'
     print '------------------------------------------------------------------------------------------------------------'
 
+    --Load silver.crm_cust_info
     set @start_time = GETDATE();
     TRUNCATE TABLE silver.crm_cust_info
     insert into silver.crm_cust_info(
@@ -35,11 +41,13 @@ CREATE OR ALTER PROCEDURE silver.load_silver AS
     cst_key,
     TRIM(cst_firstname) as cst_FirstName,
     TRIM(cst_lastname) as cst_LastName,
+    --Standardize marital status values
     case
     when upper(trim(cst_marital_status))= 'M' then 'Married'
     when upper(trim(cst_marital_status)) = 'S' then 'Single'
     else 'n/a'
     end cst_marital_status,
+    --Standardize gender values
     case
     when upper(trim(cst_gndr))= 'M' then 'Male'
     when upper(trim(cst_gndr)) = 'F' then 'Female'
@@ -58,6 +66,7 @@ CREATE OR ALTER PROCEDURE silver.load_silver AS
     print '>>----------------------------------------------------'
 
     ------------------------------------------------------------------------------------------------------
+    --Load silver.crm_prd_info
     set @start_time = GETDATE();
     TRUNCATE TABLE silver.crm_prd_info
     INSERT INTO silver.crm_prd_info(
@@ -77,6 +86,7 @@ CREATE OR ALTER PROCEDURE silver.load_silver AS
     SUBSTRING(prd_key,7,LEN(prd_key))as prd_key,
     prd_nm,
     ISNULL(prd_cost,0) as prd_cost,
+    --Map product line codes to descriptive values
     case UPPER(TRIM(prd_line)) 
          when 'M' then 'Mountain'
          when 'R' then 'Road'
@@ -91,6 +101,7 @@ CREATE OR ALTER PROCEDURE silver.load_silver AS
     print '>> Load Duration: ' + cast(dateDiff(second, @start_time, @end_time) as NVARCHAR) + 'Seconds'
     print '>>----------------------------------------------------'
     ----------------------------------------------------------------------------------------------------
+   --Load silver.crm_sales_detail
    set @start_time = GETDATE();
    TRUNCATE TABLE silver.crm_sales_detail
     INSERT INTO silver.crm_sales_detail(
@@ -108,6 +119,7 @@ CREATE OR ALTER PROCEDURE silver.load_silver AS
     sls_ord_num,
     sls_prd_key,
     sls_cust_id,
+    --Convert valid 8-digit int to date
     CASE WHEN sls_order_dt = 0 OR LEN(sls_order_dt) != 8 then NULL
          ELSE CAST(CAST(sls_order_dt AS VARCHAR) AS DATE)
     END sls_order_dt,
@@ -117,11 +129,13 @@ CREATE OR ALTER PROCEDURE silver.load_silver AS
     CASE WHEN sls_due_dt= 0 OR LEN(sls_due_dt) != 8 then NULL
          ELSE CAST(CAST(sls_due_dt AS VARCHAR) AS DATE)
     END sls_due_dt,
+    --Recalculate sales if inconsistent
     CASE WHEN sls_sales<=0 or sls_sales is null or sls_sales != sls_quantity *ABS(sls_price)
          then sls_quantity * ABS(sls_price)
     else sls_sales
     end sls_sales,
     sls_quantity,
+    --Derive price if missing or invalid
     case 
         when sls_price is null or sls_price <= 0 then sls_sales/NULLIF(sls_quantity,0)
         else sls_price
