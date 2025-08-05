@@ -1,6 +1,6 @@
 /*
 ==================================================================================================================================
-Stored Procedure: Load silver Layer (Bronze -> Silver
+Stored Procedure: Load silver Layer (Bronze -> Silver)
 ================================================================================================================================== 
 Purpose:
     This procedure performs ETL(Extract, Transform and Load) data from the Bronze layer to the Silver layer.
@@ -148,6 +148,7 @@ CREATE OR ALTER PROCEDURE silver.load_silver AS
     print '------------------------------------------------------------------------------------------------------------'
     print 'Loading ERP Tables'
     print '------------------------------------------------------------------------------------------------------------'
+    -- Load silver.erp_cst_az12
     set @start_time = GETDATE();
     TRUNCATE TABLE silver.erp_cst_az12
     INSERT INTO silver.erp_cst_az12(
@@ -172,6 +173,7 @@ CREATE OR ALTER PROCEDURE silver.load_silver AS
     print '>> Load Duration: ' + cast(dateDiff(second, @start_time, @end_time) as NVARCHAR) + 'Seconds'
     print '>>----------------------------------------------------'
     ----------------------------------------------------------------------------------------------------
+    --Load silver.erp_Loc_A101
     set @start_time = GETDATE();
     TRUNCATE TABLE silver.erp_Loc_A101
     INSERT INTO silver.erp_Loc_A101(
@@ -190,6 +192,7 @@ CREATE OR ALTER PROCEDURE silver.load_silver AS
     print '>> Load Duration: ' + cast(dateDiff(second, @start_time, @end_time) as NVARCHAR) + 'Seconds'
     print '>>----------------------------------------------------'
     ------------------------------------------------------------------------------------------------------
+    --Load silver.erp_px_g1v2
     set @start_time = GETDATE();
     TRUNCATE TABLE silver.erp_px_g1v2
     INSERT INTO silver.erp_px_g1v2(
