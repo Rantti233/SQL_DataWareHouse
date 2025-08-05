@@ -4,7 +4,8 @@ QUALITY CHECK
 ===================================================================================================================================
 Purpose:
          --This script performs a series of data quality checks on the Silver layer tables
-         --to identify duplicate records, invalid formats, missing or inconsistent data,
+         --To identify null or duplicate records, unwanted space, invalid formats, missing or inconsistent data
+         --Data conistency between related fields
 Usage Notes:
           -- Rum these checks after data loading silver layer
           --Investigate and resolve any discripancies found during check
